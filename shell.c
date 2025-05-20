@@ -51,24 +51,40 @@ char* parse(char* str){
 
 void parse(char *input, char **argv){
     while(*input != '\0'){
+        //Toglie caratteri vuoti prima del gruppo di caratteri che si va ad analizzare
         while(*input == ' ' || *input == '\t' || *input == '\n'){
             *input++ = '\0';
         }
+
+        //In argv[0] ci sarà il comando, successivamente le opzioni
         *argv++ = input;
+
+        //Va al prossimo gruppo di caratteri valido
         while(*input != '\0' && *input != '\t' && *input != '\n' && *input != ' '){
             input++;
         }
     }
+
+    //?
     *(argv - 1) = NULL;
     *argv = NULL;
 }
 
 
 void executeCommand(char** argv){
+    //Check se comando interno
+    if(strcmp(argv[0], "cd") == 0){
+        int res = chdir(argv[1]);
+        return;
+    }
+
+
     pid_t pid=fork();
     if (pid == 0) {
         // Newly spawned child Process. This will be taken over by "ls -l"
-        if(execvp(*argv, argv)<0){
+        int res = execvp(*argv, argv);
+        printf("DEBUG: res = %d\n", res);
+        if(res<0){
             printf("*** ERROR: exec failed\n");
             exit(EXIT_FAILURE);
         }
@@ -95,11 +111,6 @@ int main(){
         parse(input, argv);
         if(strcmp(argv[0], "exit") == 0)
            exit(EXIT_SUCCESS);
-        /*for(int i = 1; i < 64; i++){
-            if(**(argv + i) == '\0')
-                *(argv + i) = NULL;
-        }
-        */
         executeCommand(argv); 
     }
     return 0;
