@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/types.h> /* for pid_t */
 #include <sys/wait.h> /* for wait */
+#include "export.h"
 
 // Concetti chiave:
 // - Loop di input: leggere comandi dall’utente.
@@ -49,6 +50,8 @@ char* parse(char* str){
 //}
 //*/
 
+
+
 void parse(char *input, char **argv){
     while(*input != '\0'){
         //Toglie caratteri vuoti prima del gruppo di caratteri che si va ad analizzare
@@ -72,9 +75,22 @@ void parse(char *input, char **argv){
 
 
 void executeCommand(char** argv){
+
+    //Result state
+    int res;
+
     //Check se comando interno
     if(strcmp(argv[0], "cd") == 0){
         int res = chdir(argv[1]);
+        return;
+    }
+    
+    if(strcmp(argv[0], "export") == 0){
+        res = runExport(argv);
+        if(res<0){
+            printf("*** ERROR: exec failed\n");
+            exit(EXIT_FAILURE);
+        }
         return;
     }
 
@@ -82,7 +98,7 @@ void executeCommand(char** argv){
     pid_t pid=fork();
     if (pid == 0) {
         // Newly spawned child Process. This will be taken over by "ls -l"
-        int res = execvp(*argv, argv);
+        res = execvp(*argv, argv);
         printf("DEBUG: res = %d\n", res);
         if(res<0){
             printf("*** ERROR: exec failed\n");
